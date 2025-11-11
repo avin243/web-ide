@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avi's Compiler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
+            display: flex;
+            color: var(--dark);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 240px;
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 24px;
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            flex-shrink: 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--light);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-text span {
+            display: block;
+            font-size: 12px;
+            color: var(--gray);
+            font-weight: 400;
+        }
+
+        .language-select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .language-select:hover {
+            background-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .language-select.active {
+            background-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            margin-left: 240px;
+            overflow-y: auto;
+            width: calc(100% - 240px);
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .ide-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 16px;
+        }
+
+        .editor h3 {
+            margin-bottom: 16px;
+            color: var(--dark);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            resize: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background-color: #f8fafc;
+        }
+
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+
+        .buttons {
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .output {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .output h3 {
+            margin-bottom: 16px;
+            color: var(--dark);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #outputFrame {
+            width: 100%;
+            height: 300px;
+            border: none;
+            background-color: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .console {
+            background-color: var(--dark);
+            color: #10b981;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 16px;
+            border-radius: 8px;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 16px 0;
+            color: var(--primary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .loading::after {
+            content: "⌛";
+            animation: spin 1s infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: var(--error);
+            margin: 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 8px;
+            background-color: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+
+        .success {
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 8px;
+            background-color: rgba(34, 197, 94, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Python-specific output classes to preserve newlines */
+        .python-success {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 8px;
+            background-color: rgba(34, 197, 94, 0.1);
+            border-radius: 4px;
+        }
+
+        .python-error {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            color: var(--error);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            padding: 8px;
+            background-color: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+
+        .instructions {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-container">
+            <div class="logo">A</div>
+            <div class="logo-text">
+                Avi's Compiler
+                <span>Code & Create</span>
+            </div>
+        </div>
+        <button class="language-select active" data-lang="webdev">
+            <span>🌐</span> Web Development
+        </button>
+        <button class="language-select" data-lang="python">
+            <span>🐍</span> Python
+        </button>
+        <button class="language-select" data-lang="java">
+            <span>☕</span> Java
+        </button>
+        <button class="language-select" data-lang="cpp">
+            <span>⚡</span> C++
+        </button>
+        <button class="language-select" data-lang="csharp">
+            <span>#</span> C#
+        </button>
+        <button class="language-select" data-lang="ruby">
+            <span>💎</span> Ruby
+        </button>
+        <button class="language-select" data-lang="go">
+            <span>🔷</span> Go
+        </button>
+        <button class="language-select" data-lang="rust">
+            <span>⚙️</span> Rust
+        </button>
+    </div>
+
+    <div class="main-content">
+        <div id="webdev-ide" class="ide-container">
+            <div class="container">
+                <div class="editor">
+                    <h3><span>📝</span> HTML</h3>
+                    <textarea id="htmlEditor" placeholder="Enter HTML code here..."><!DOCTYPE html>
+<html>
+<head>
+    <title>My Page</title>
+</head>
+<body>
+    <h1>Hello World!</h1>
+</body>
+</html></textarea>
+                </div>
+                <div class="editor">
+                    <h3><span>🎨</span> CSS</h3>
+                    <textarea id="cssEditor" placeholder="Enter CSS code here...">body {
+    background-color: #f0f0f0;
+    font-family: 'Poppins', sans-serif;
+}
+
+h1 {
+    color: #4f46e5;
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 2.5rem;
+}</textarea>
+                </div>
+                <div class="editor">
+                    <h3><span>⚡</span> JavaScript</h3>
+                    <textarea id="jsEditor" placeholder="Enter JavaScript code here...">console.log('Welcome to Avi\'s Compiler! 🚀');
+
+// Add some animation to the heading
+const heading = document.querySelector('h1');
+heading.style.opacity = '0';
+heading.style.transform = 'translateY(-20px)';
+heading.style.transition = 'all 0.5s ease';
+
+setTimeout(() => {
+    heading.style.opacity = '1';
+    heading.style.transform = 'translateY(0)';
+}, 500);</textarea>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button onclick="runCode()"><span>▶</span> Run Code</button>
+            </div>
+
+            <div class="output">
+                <h3><span>🖥️</span> Output</h3>
+                <iframe id="outputFrame"></iframe>
+                <div class="console" id="consoleOutput"></div>
+            </div>
+        </div>
+
+        <div id="python-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3><span>🐍</span> Python</h3>
+                <textarea id="pythonEditor" placeholder="Enter Python code here...">def fibonacci(n):
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+
+print("Welcome to Avi's Python Compiler! 🐍")
+print("\nFirst 10 Fibonacci numbers:")
+for i in range(10):
+    print(f"fibonacci({i}) = {fibonacci(i)}")</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runPython()"><span>▶</span> Run Python</button>
+            </div>
+            <div class="loading" id="pythonLoading">Running Python code...</div>
+            <div class="console" id="pythonOutput"></div>
+        </div>
+
+        <!-- Similar updates for other language containers -->
+
+    </div>
+
+        <div id="java-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3>Java</h3>
+                <textarea id="javaEditor" placeholder="Enter Java code here...">public class Main {
+    public static int factorial(int n) {
+        if (n <= 1) return 1;
+        return n * factorial(n - 1);
+    }
+    
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            System.out.printf("Factorial(%d) = %d%n", i, factorial(i));
+        }
+    }
+}</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runJava()">Run Java</button>
+            </div>
+            <div class="loading" id="javaLoading">Running Java code...</div>
+            <div class="console" id="javaOutput"></div>
+        </div>
+
+        <div id="cpp-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3>C++</h3>
+                <textarea id="cppEditor" placeholder="Enter C++ code here...">#include <iostream>
+using namespace std;
+
+int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
+
+int main() {
+    for(int i = 1; i <= 5; i++) {
+        for(int j = 1; j <= 5; j++) {
+            cout << "GCD(" << i << "," << j << ") = " 
+                 << gcd(i,j) << endl;
+        }
+    }
+    return 0;
+}</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runCpp()">Run C++</button>
+            </div>
+            <div class="loading" id="cppLoading">Running C++ code...</div>
+            <div class="console" id="cppOutput"></div>
+        </div>
+
+        <div id="csharp-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3>C#</h3>
+                <textarea id="csharpEditor" placeholder="Enter C# code here...">using System;
+
+class Program {
+    static bool IsPrime(int n) {
+        if (n <= 1) return false;
+        for (int i = 2; i * i <= n; i++) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+
+    static void Main() {
+        Console.WriteLine("First 10 prime numbers:");
+        int count = 0;
+        int num = 2;
+        while (count < 10) {
+            if (IsPrime(num)) {
+                Console.WriteLine(num);
+                count++;
+            }
+            num++;
+        }
+    }
+}</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runCSharp()">Run C#</button>
+            </div>
+            <div class="loading" id="csharpLoading">Running C# code...</div>
+            <div class="console" id="csharpOutput"></div>
+        </div>
+
+        <div id="ruby-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3>Ruby</h3>
+                <textarea id="rubyEditor" placeholder="Enter Ruby code here...">def bubble_sort(arr)
+  n = arr.length
+  loop do
+    swapped = false
+    (n-1).times do |i|
+      if arr[i] > arr[i+1]
+        arr[i], arr[i+1] = arr[i+1], arr[i]
+        swapped = true
+      end
+    end
+    break unless swapped
+  end
+  arr
+end
+
+# Test the sorting
+arr = [64, 34, 25, 12, 22, 11, 90]
+puts "Original array: #{arr}"
+puts "Sorted array: #{bubble_sort(arr)}"</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runRuby()">Run Ruby</button>
+            </div>
+            <div class="loading" id="rubyLoading">Running Ruby code...</div>
+            <div class="console" id="rubyOutput"></div>
+        </div>
+
+        <div id="go-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3>Go</h3>
+                <textarea id="goEditor" placeholder="Enter Go code here...">package main
+
+import "fmt"
+
+func generatePascalTriangle(n int) [][]int {
+    triangle := make([][]int, n)
+    for i := range triangle {
+        triangle[i] = make([]int, i+1)
+        triangle[i][0] = 1
+        triangle[i][i] = 1
+        for j := 1; j < i; j++ {
+            triangle[i][j] = triangle[i-1][j-1] + triangle[i-1][j]
+        }
+    }
+    return triangle
+}
+
+func main() {
+    rows := 5
+    triangle := generatePascalTriangle(rows)
+    fmt.Println("Pascal's Triangle:")
+    for _, row := range triangle {
+        fmt.Println(row)
+    }
+}</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runGo()">Run Go</button>
+            </div>
+            <div class="loading" id="goLoading">Running Go code...</div>
+            <div class="console" id="goOutput"></div>
+        </div>
+
+        <div id="rust-ide" class="ide-container" style="display: none;">
+            <div class="editor">
+                <h3>Rust</h3>
+                <textarea id="rustEditor" placeholder="Enter Rust code here...">fn quick_sort<T: Ord>(arr: &mut [T]) {
+    if arr.len() <= 1 {
+        return;
+    }
+    
+    let pivot = arr.len() - 1;
+    let mut i = 0;
+    
+    for j in 0..pivot {
+        if arr[j] <= arr[pivot] {
+            arr.swap(i, j);
+            i += 1;
+        }
+    }
+    
+    arr.swap(i, pivot);
+    
+    let (left, right) = arr.split_at_mut(i);
+    quick_sort(left);
+    quick_sort(&mut right[1..]);
+}
+
+fn main() {
+    let mut numbers = vec![64, 34, 25, 12, 22, 11, 90];
+    println!("Before sorting: {:?}", numbers);
+    quick_sort(&mut numbers);
+    println!("After sorting: {:?}", numbers);
+}</textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="runRust()">Run Rust</button>
+            </div>
+            <div class="loading" id="rustLoading">Running Rust code...</div>
+            <div class="console" id="rustOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        // Handle language switching
+        document.querySelectorAll('.language-select').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                document.querySelector('.language-select.active').classList.remove('active');
+                button.classList.add('active');
+
+                // Hide all IDEs
+                document.querySelectorAll('.ide-container').forEach(ide => {
+                    ide.style.display = 'none';
+                });
+
+                // Show selected IDE
+                const selectedLang = button.getAttribute('data-lang');
+                document.getElementById(`${selectedLang}-ide`).style.display = 'block';
+            });
+        });
+
+        function runCode() {
+            const html = document.getElementById('htmlEditor').value;
+            const css = document.getElementById('cssEditor').value;
+            const js = document.getElementById('jsEditor').value;
+            
+            // Clear console
+            document.getElementById('consoleOutput').innerHTML = '';
+
+            // Extract body content from HTML
+            let bodyContent = html;
+            bodyContent = bodyContent.replace(/<!DOCTYPE html>/gi, '');
+            bodyContent = bodyContent.replace(/<html[^>]*>/gi, '');
+            bodyContent = bodyContent.replace(/<\/html>/gi, '');
+            bodyContent = bodyContent.replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '');
+            bodyContent = bodyContent.replace(/<body[^>]*>/gi, '');
+            bodyContent = bodyContent.replace(/<\/body>/gi, '');
+
+            // Create the complete HTML document
+            const combinedCode = `<!DOCTYPE html>
+<html>
+<head>
+    <style>${css}</style>
+</head>
+<body>
+    ${bodyContent}
+    <script>
+        // Capture console.log
+        (function(){
+            const logs = [];
+            const originalLog = console.log;
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                logs.push(args.join(' '));
+                window.__logs = logs;
+            };
+        })();
+        ${js}
+    <\/script>
+</body>
+</html>`;
+
+            // Update the iframe with the new code
+            const iframe = document.getElementById('outputFrame');
+            iframe.srcdoc = combinedCode;
+            
+            // Try to access logs from iframe after it loads
+            iframe.onload = function() {
+                try {
+                    const iframeWindow = iframe.contentWindow;
+                    if (iframeWindow.__logs && iframeWindow.__logs.length > 0) {
+                        const consoleOutput = document.getElementById('consoleOutput');
+                        iframeWindow.__logs.forEach(log => {
+                            consoleOutput.innerHTML += log + '<br>';
+                        });
+                    }
+                } catch (e) {
+                    // Cross-origin or security issue, silently fail
+                }
+            };
+        }
+
+        // Simple, safe HTML escaper to avoid injecting markup into the output area
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        async function executeCode(language, code) {
+            const loadingEl = document.getElementById(`${language}Loading`);
+            const outputEl = document.getElementById(`${language}Output`);
+            
+            try {
+                loadingEl.style.display = 'block';
+                outputEl.innerHTML = '';
+                
+                const response = await fetch(`http://localhost:3000/run/${language}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    const escaped = escapeHtml(result.error);
+                    outputEl.innerHTML += `<div class="error">${escaped}</div>`;
+                } else {
+                    if (result.stdout) {
+                        const escapedOut = escapeHtml(result.stdout);
+                        outputEl.innerHTML += `<div class="success">${escapedOut}</div>`;
+                    }
+                    if (result.stderr) {
+                        const escapedErr = escapeHtml(result.stderr);
+                        outputEl.innerHTML += `<div class="error">${escapedErr}</div>`;
+                    }
+                }
+            } catch (err) {
+                const escaped = escapeHtml(err && err.message ? err.message : String(err));
+                outputEl.innerHTML += `<div class="error">Error: ${escaped}</div>`;
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Python-only executor - preserves newlines in output using python-specific classes
+        async function executePython(code) {
+            const language = 'python';
+            const loadingEl = document.getElementById(`${language}Loading`);
+            const outputEl = document.getElementById(`${language}Output`);
+            try {
+                loadingEl.style.display = 'block';
+                outputEl.innerHTML = '';
+
+                const response = await fetch(`http://localhost:3000/run/${language}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    const escaped = escapeHtml(result.error);
+                    outputEl.innerHTML += `<div class="python-error"><pre>${escaped}</pre></div>`;
+                } else {
+                    if (result.stdout) {
+                        const escapedOut = escapeHtml(result.stdout);
+                        outputEl.innerHTML += `<div class="python-success"><pre>${escapedOut}</pre></div>`;
+                    }
+                    if (result.stderr) {
+                        const escapedErr = escapeHtml(result.stderr);
+                        outputEl.innerHTML += `<div class="python-error"><pre>${escapedErr}</pre></div>`;
+                    }
+                }
+            } catch (err) {
+                const escaped = escapeHtml(err && err.message ? err.message : String(err));
+                outputEl.innerHTML += `<div class="python-error"><pre>Error: ${escaped}</pre></div>`;
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        async function runPython() {
+            const code = document.getElementById('pythonEditor').value;
+            await executePython(code);
+        }
+
+        async function runJava() {
+            const code = document.getElementById('javaEditor').value;
+            await executeCode('java', code);
+        }
+
+        async function runCpp() {
+            const code = document.getElementById('cppEditor').value;
+            await executeCode('cpp', code);
+        }
+
+        async function runCSharp() {
+            const code = document.getElementById('csharpEditor').value;
+            document.getElementById('csharpOutput').innerHTML = 
+                '<div class="info">C# execution requires .NET runtime installation on the server</div>';
+        }
+
+        async function runRuby() {
+            const code = document.getElementById('rubyEditor').value;
+            document.getElementById('rubyOutput').innerHTML = 
+                '<div class="info">Ruby execution requires Ruby installation on the server</div>';
+        }
+
+        async function runGo() {
+            const code = document.getElementById('goEditor').value;
+            document.getElementById('goOutput').innerHTML = 
+                '<div class="info">Go execution requires Go installation on the server</div>';
+        }
+
+        async function runRust() {
+            const code = document.getElementById('rustEditor').value;
+            document.getElementById('rustOutput').innerHTML = 
+                '<div class="info">Rust execution requires Rust installation on the server</div>';
+        }
+
+        // Run the web code initially
+        runCode();
+    </script>
+</body>
+</html>
