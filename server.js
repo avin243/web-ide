@@ -13,6 +13,16 @@ const PORT = process.env.PORT || 3000;
 // Serve static frontend files (so ide.html is available at /ide.html)
 app.use(express.static(__dirname));
 
+// Serve ide.html at root path (/) so the IDE loads automatically
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'ide.html'));
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Server is running' });
+});
+
 // Temporary directory for code files
 const TEMP_DIR = path.join(__dirname, 'temp');
 
@@ -116,5 +126,6 @@ app.post('/run/cpp', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`✨ Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Open http://localhost:${PORT}/ in your browser to start coding!`);
 });
